@@ -106773,6 +106773,10 @@ r=Math.abs(j-m)
 q=Math.abs(s-l)
 return B.b([Math.min(r,q),Math.max(r,q)],t.n)},
 aqV(a,a0){var s,r,q,p,o,n,m,l,k,j,i,h,g=a0.b,f=a0.c,e=this.a,d=e.b,c=a0.d+d,b=a0.e+d
+if(e.e)for(s=0;s<a.length;++s){q=a[s]
+if(Math.abs(q.a-g)<0.000001&&Math.abs(q.b-f)<0.000001&&a0.d<=q.c+0.000001&&a0.e<=q.d+0.000001){c=Math.min(c,q.c)
+b=Math.min(b,q.d)
+break}}
 for(s=a.length-1,e=e.e,d=g+c,r=f+b;s>=0;--s){q=a[s]
 p=q.a
 o=q.c
@@ -106789,10 +106793,10 @@ j=n+l-r
 if(e){i=Math.max(0,k)
 h=Math.max(0,j)
 if(i*l+h*c>=i*b+h*o){if(k>0.000001)a.push(new B.ek(d,n,k,l))
-if(j>0.000001)a.push(new B.ek(p,r,c,j))}else{if(k>0.000001)a.push(new B.ek(d,n,k,b))
-if(j>0.000001)a.push(new B.ek(p,r,o,j))}}else{if(g>p+0.000001)a.push(new B.ek(p,n,g-p,l))
+if(j>0.000001)a.push(new B.ek(p,r,k>0.000001?a0.d:c,j))}else{if(k>0.000001)a.push(new B.ek(d,n,k,j>0.000001?a0.e:b))
+if(j>0.000001)a.push(new B.ek(p,r,o,j))}}else{if(g-(c-a0.d)>p+0.000001)a.push(new B.ek(p,n,g-(c-a0.d)-p,l))
 if(k>0.000001)a.push(new B.ek(d,n,k,l))
-if(f>n+0.000001)a.push(new B.ek(p,n,o,f-n))
+if(f-(b-a0.e)>n+0.000001)a.push(new B.ek(p,n,o,f-(b-a0.e)-n))
 if(j>0.000001)a.push(new B.ek(p,r,o,j))}}}}
 B.akr.prototype={
 $2(a,b){return a+b.b*b.c},
