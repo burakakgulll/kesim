@@ -1,47 +1,799 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="tr">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#26323d">
+<title>Kesim Planı – Panel kesim optimizasyonu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='5' width='28' height='22' fill='%23ebddbe' stroke='%2326323d' stroke-width='2'/><path d='M13 5v22M2 16h11' stroke='%2326323d' stroke-width='2'/></svg>">
+<style>
+:root {
+  --ink: #26323d;
+  --text: #1f2830;
+  --muted: #5d6a75;
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --line: #d5dade;
+  --head: #e2e6ea;
+  --accent: #2f6f8f;
+  --accent-text: #ffffff;
+  --warn: #b4432a;
+  --warn-bg: #fbe9e5;
+  --input: #ffffff;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e3e8ec;
+    --muted: #9aa7b2;
+    --bg: #161c21;
+    --panel: #1f272e;
+    --line: #34404a;
+    --head: #28323a;
+    --accent: #5aa3c6;
+    --accent-text: #0e1418;
+    --warn: #f0907a;
+    --warn-bg: #3a2420;
+    --input: #182026;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  font-size: 15px; line-height: 1.4;
+  background: var(--bg); color: var(--text);
+}
+button, input, select { font: inherit; color: inherit; }
+header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--ink); color: #fff;
+}
+#projectName {
+  flex: 1; min-width: 0; background: transparent; border: 1px solid transparent;
+  color: #fff; font-size: 17px; font-weight: 600; padding: 6px 8px; border-radius: 4px;
+}
+#projectName:hover, #projectName:focus { border-color: #ffffff55; outline: none; }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 6px;
+  padding: 7px 12px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+header .btn { background: #ffffff14; border-color: #ffffff40; color: #fff; }
+header .btn.primary { background: #fff; color: var(--ink); border-color: #fff; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+details.menu { position: relative; }
+details.menu > summary { list-style: none; }
+details.menu > summary::-webkit-details-marker { display: none; }
+.menu-list {
+  position: absolute; right: 0; top: calc(100% + 6px); min-width: 230px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; box-shadow: 0 8px 24px #0003; padding: 6px; z-index: 30;
+}
+.menu-list button {
+  display: block; width: 100%; text-align: left; background: none; border: 0;
+  padding: 9px 10px; border-radius: 4px; cursor: pointer;
+}
+.menu-list button:hover { background: var(--head); }
+.menu-list hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px; max-width: 1500px; margin: 0 auto; }
+@media (min-width: 980px) { main { grid-template-columns: 500px minmax(0, 1fr); align-items: start; } #inputs { position: sticky; top: 64px; max-height: calc(100vh - 76px); overflow: auto; } }
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+section.box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+section.box > h2 {
+  margin: 0; font-size: 15px; padding: 10px 12px; background: var(--head);
+  display: flex; align-items: baseline; gap: 8px;
+}
+section.box > h2 small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.grid-head, .row { display: grid; grid-template-columns: 8px 1fr 1fr 64px 1.2fr 34px; gap: 6px; align-items: center; padding: 0 10px; }
+.grid-head { padding-top: 8px; padding-bottom: 2px; font-size: 12px; color: var(--muted); }
+.row { padding-top: 4px; padding-bottom: 4px; }
+.row + .extra { padding: 0 10px 6px 24px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+.extra label { display: inline-flex; align-items: center; gap: 4px; }
+.swatch { width: 8px; height: 32px; border-radius: 2px; }
+.cell {
+  width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid var(--line);
+  border-radius: 4px; background: var(--input);
+}
+.cell.bad { border-color: var(--warn); }
+.del { border: 0; background: none; cursor: pointer; font-size: 20px; color: var(--muted); padding: 2px; border-radius: 4px; }
+.del:hover { color: var(--warn); }
+.add { margin: 6px 10px 10px; background: none; border: 1px dashed var(--line); }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-top: 1px solid var(--line); }
+.opt:first-of-type { border-top: 0; }
+.opt input.cell { width: 96px; text-align: right; }
+.opt small { display: block; color: var(--muted); font-size: 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg label { padding: 6px 12px; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-text); }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="/kesim/">
+#results .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+.summary { display: flex; flex-wrap: wrap; gap: 14px 28px; padding: 14px; }
+.stat b { display: block; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stock-use { padding: 0 14px 12px; color: var(--muted); font-size: 13px; }
+.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.sheet { padding: 12px; }
+.sheet-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sheet-head h3 { margin: 0; font-size: 16px; }
+.badge { background: var(--accent); color: var(--accent-text); border-radius: 4px; padding: 1px 8px; font-size: 12px; }
+.sheet-head .pct { margin-left: auto; font-variant-numeric: tabular-nums; }
+.sheet-sub { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.sheet svg { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.sheet details { margin-top: 6px; font-size: 14px; }
+.sheet details summary { cursor: pointer; color: var(--muted); }
+.sheet ul { margin: 6px 0 0; padding-left: 18px; }
+.hint { font-size: 12px; color: var(--muted); padding: 0 2px; }
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+dialog#zoom { width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--text); }
+dialog#zoom .zbar { position: sticky; top: 0; display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: var(--ink); color: #fff; }
+dialog#zoom .zbar .btn { background: #ffffff14; border-color: #ffffff40; color: #fff; }
+dialog#zoom .zarea { overflow: auto; height: calc(100vh - 52px); padding: 12px; }
+dialog#zoom svg { display: block; }
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="kesim">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>kesim</title>
-  <link rel="manifest" href="manifest.json">
+.print-only { display: none; }
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  header, #inputs, .no-print, .hint, dialog, .sheet details > summary { display: none !important; }
+  main { display: block; padding: 0; max-width: none; }
+  .print-only { display: block; }
+  section.box { border: 0; margin: 0; }
+  .sheet { break-inside: avoid; page-break-inside: avoid; break-before: page; padding: 0; }
+  .sheet svg { max-height: 140mm; width: auto; max-width: 100%; margin: 0 auto; }
+  .sheet ul { columns: 3; font-size: 9pt; }
+  #toast { display: none !important; }
+  .sheet details > *:not(summary) { display: block; }
+  .stat span, .sheet-sub, .stock-use { color: #333; }
+  .badge { border: 1px solid #000; background: none; color: #000; }
+  table.plist { border-collapse: collapse; width: 100%; font-size: 10pt; }
+  table.plist th, table.plist td { border: 1px solid #999; padding: 3px 6px; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+<header>
+  <input id="projectName" aria-label="Proje adı" value="Yeni proje">
+  <button class="btn primary" id="calcBtn" type="button">Hesapla</button>
+  <details class="menu" id="menu">
+    <summary class="btn" aria-label="Menü">Menü ▾</summary>
+    <div class="menu-list" role="menu">
+      <button type="button" data-act="link">Paylaşım bağlantısı kopyala</button>
+      <button type="button" data-act="export">Dosya olarak indir (.json)</button>
+      <button type="button" data-act="import">Dosyadan yükle (.json)</button>
+      <hr>
+      <button type="button" data-act="print">Yazdır / PDF kaydet</button>
+      <hr>
+      <button type="button" data-act="example">Örnek proje yükle</button>
+      <button type="button" data-act="clear">Tüm veriyi temizle</button>
+    </div>
+  </details>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+</header>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+<main>
+  <div id="inputs">
+    <section class="box">
+      <h2>Parçalar <small>Enter ile sonraki kutuya geçilir</small></h2>
+      <div class="grid-head"><span></span><span>Uzunluk</span><span>Genişlik</span><span>Adet</span><span>Etiket</span><span></span></div>
+      <div id="partRows"></div>
+      <button class="btn add" type="button" id="addPart">+ Parça ekle</button>
+    </section>
+
+    <section class="box">
+      <h2>Malzeme levhaları <small>Adet boşsa sınırsız</small></h2>
+      <div class="grid-head"><span></span><span>Uzunluk</span><span>Genişlik</span><span>Adet</span><span>Malzeme</span><span></span></div>
+      <div id="stockRows"></div>
+      <button class="btn add" type="button" id="addStock">+ Levha ekle</button>
+    </section>
+
+    <section class="box" id="options">
+      <h2>Seçenekler</h2>
+      <div class="opt"><label for="o_kerf">Testere payı<small>Bıçak kalınlığı</small></label><input class="cell" id="o_kerf" inputmode="decimal" data-opt="kerf"></div>
+      <div class="opt"><label for="o_trim">Kenar payı<small>Levhanın her kenarından atılır</small></label><input class="cell" id="o_trim" inputmode="decimal" data-opt="trim"></div>
+      <div class="opt"><label for="o_min">Kullanılabilir artık sınırı<small>Bundan küçük artıklar gösterilmez</small></label><input class="cell" id="o_min" inputmode="decimal" data-opt="minOffcut"></div>
+      <div class="opt"><label for="o_dec">Ondalık basamak</label><input class="cell" id="o_dec" inputmode="numeric" data-opt="decimals"></div>
+      <div class="opt"><label for="o_labels">Parça etiketlerini göster</label><input type="checkbox" id="o_labels" data-opt="showLabels"></div>
+      <div class="opt"><label for="o_grain">Desen yönünü dikkate al<small>İşaretli parçalar döndürülmez</small></label><input type="checkbox" id="o_grain" data-opt="considerGrain"></div>
+      <div class="opt"><label for="o_band">Kenar bandı hesapla</label><input type="checkbox" id="o_band" data-opt="edgeBanding"></div>
+      <div class="opt"><span>Öncelik</span>
+        <span class="seg"><label><input type="radio" name="prio" value="waste">En az fire</label><label><input type="radio" name="prio" value="sheets">En az levha</label></span></div>
+      <div class="opt"><span>Birim</span>
+        <span class="seg"><label><input type="radio" name="unit" value="mm">mm</label><label><input type="radio" name="unit" value="cm">cm</label></span></div>
+    </section>
+  </div>
+
+  <div id="results"><section class="box"><div class="empty">Ölçüleri girip <b>Hesapla</b>’ya basın.</div></section></div>
+</main>
+
+<dialog id="zoom">
+  <div class="zbar">
+    <b id="zTitle" style="flex:1"></b>
+    <button class="btn" type="button" data-z="-1" aria-label="Uzaklaştır">−</button>
+    <button class="btn" type="button" data-z="0">Sığdır</button>
+    <button class="btn" type="button" data-z="1" aria-label="Yakınlaştır">+</button>
+    <button class="btn" type="button" id="zClose">Kapat</button>
+  </div>
+  <div class="zarea" id="zArea"></div>
+</dialog>
+<script>
+// ---- Kesim optimizasyonu (giyotin sezgisel paketleme, Jylänki) ----
+// x ekseni = levha uzunluğu (desen yönü), y ekseni = levha genişliği.
+const EPS = 1e-6;
+
+function makeRng(seed) {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function optimize(parts, stocks, settings, opts = {}) {
+  const randomRuns = opts.randomRuns ?? 150;
+  const kerf = +settings.kerf || 0, trim = +settings.trim || 0;
+  const items = [];
+  parts.forEach((p, i) => {
+    if (!(p.length > 0 && p.width > 0 && p.qty > 0)) return;
+    const lock = settings.considerGrain && p.grainLocked;
+    const label = p.label || String(i + 1);
+    for (let k = 0; k < p.qty; k++)
+      items.push({ pi: i, l: p.length, w: p.width, rot: !lock, label, area: p.length * p.width });
+  });
+  const valid = [];
+  stocks.forEach((s, i) => {
+    if (s.length > 0 && s.width > 0 && s.length - 2 * trim > 0 && s.width - 2 * trim > 0) valid.push(i);
+  });
+  if (!items.length) return { sheets: [], unplaced: [], warnings: ['Geçerli parça yok.'] };
+  if (!valid.length) return { sheets: [], unplaced: items.map(i => i.pi), warnings: ['Geçerli levha yok.'] };
+
+  const orders = [
+    (a, b) => b.area - a.area,
+    (a, b) => Math.max(b.l, b.w) - Math.max(a.l, a.w),
+    (a, b) => (b.l - a.l) || (b.w - a.w),
+    (a, b) => (b.w - a.w) || (b.l - a.l),
+    (a, b) => (b.l + b.w) - (a.l + a.w),
+  ];
+  const sheetArea = sh => sh.length * sh.width;
+  const better = (a, b) => {
+    if (a.unplaced.length !== b.unplaced.length) return a.unplaced.length < b.unplaced.length;
+    const aa = a.sheets.reduce((s, e) => s + sheetArea(e), 0);
+    const ba = b.sheets.reduce((s, e) => s + sheetArea(e), 0);
+    const cc = a.sheets.length - b.sheets.length;
+    const ac = Math.abs(aa - ba) < EPS ? 0 : aa - ba;
+    if (settings.priority === 'sheets') { if (cc) return cc < 0; if (ac) return ac < 0; }
+    else { if (ac) return ac < 0; if (cc) return cc < 0; }
+    const lf = r => r.sheets.length ? Math.max(0, ...r.sheets[r.sheets.length - 1].free.map(f => f.w * f.h)) : 0;
+    return lf(a) > lf(b) + EPS;
+  };
+
+  function fillSheet(si, list, fc, sp) {
+    const st = stocks[si];
+    const free = [{ x: trim, y: trim, w: st.length - 2 * trim, h: st.width - 2 * trim }];
+    const placed = [], used = [];
+    for (let idx = 0; idx < list.length; idx++) {
+      const it = list[idx];
+      let bi = -1, brot = false, b1 = Infinity, b2 = Infinity;
+      for (let r = 0; r < free.length; r++) {
+        const f = free[r];
+        const rots = it.rot && Math.abs(it.l - it.w) > EPS ? [false, true] : [false];
+        for (const rot of rots) {
+          const w = rot ? it.w : it.l, h = rot ? it.l : it.w;
+          if (w > f.w + EPS || h > f.h + EPS) continue;
+          const dw = f.w - w, dh = f.h - h;
+          let s1, s2;
+          if (fc === 0) { s1 = f.w * f.h - w * h; s2 = Math.min(dw, dh); }
+          else if (fc === 1) { s1 = Math.min(dw, dh); s2 = Math.max(dw, dh); }
+          else { s1 = Math.max(dw, dh); s2 = Math.min(dw, dh); }
+          if (s1 < b1 - EPS || (Math.abs(s1 - b1) <= EPS && s2 < b2)) { b1 = s1; b2 = s2; bi = r; brot = rot; }
+        }
+      }
+      if (bi < 0) continue;
+      const f = free.splice(bi, 1)[0];
+      const w = brot ? it.w : it.l, h = brot ? it.l : it.w;
+      placed.push({ pi: it.pi, label: it.label, x: f.x, y: f.y, w, h, rotated: brot });
+      used.push(idx);
+      const wr = f.w - w, hr = f.h - h;
+      let horiz;
+      if (sp === 0) horiz = wr <= hr;
+      else if (sp === 1) horiz = wr > hr;
+      else if (sp === 2) horiz = w * hr > wr * h;
+      else horiz = w * hr <= wr * h;
+      const rx = f.x + w + kerf, rw = f.w - w - kerf, by = f.y + h + kerf, bh = f.h - h - kerf;
+      let right, bottom;
+      if (horiz) { bottom = { x: f.x, y: by, w: f.w, h: bh }; right = { x: rx, y: f.y, w: rw, h }; }
+      else { right = { x: rx, y: f.y, w: rw, h: f.h }; bottom = { x: f.x, y: by, w, h: bh }; }
+      if (right.w > EPS && right.h > EPS) free.push(right);
+      if (bottom.w > EPS && bottom.h > EPS) free.push(bottom);
+    }
+    const usedArea = placed.reduce((s, p) => s + p.w * p.h, 0);
+    return { sheet: { si, length: st.length, width: st.width, placed, free, usedArea }, used };
+  }
+
+  function pack(order, fc, sp) {
+    let remaining = order.slice();
+    const avail = {}; valid.forEach(i => avail[i] = +stocks[i].qty || 0);
+    const sheets = [];
+    while (remaining.length) {
+      let chosen = null;
+      for (const si of valid) {
+        const unlimited = !(stocks[si].qty > 0);
+        if (!unlimited && avail[si] <= 0) continue;
+        const f = fillSheet(si, remaining, fc, sp);
+        if (!f.sheet.placed.length) continue;
+        const u = f.sheet.usedArea / sheetArea(f.sheet);
+        if (!chosen) { chosen = f; continue; }
+        const u0 = chosen.sheet.usedArea / sheetArea(chosen.sheet);
+        if (u > u0 + 1e-9 || (Math.abs(u - u0) <= 1e-9 && f.sheet.usedArea > chosen.sheet.usedArea)) chosen = f;
+      }
+      if (!chosen) break;
+      sheets.push(chosen.sheet);
+      const si = chosen.sheet.si;
+      if (stocks[si].qty > 0) avail[si]--;
+      const set = new Set(chosen.used);
+      remaining = remaining.filter((_, i) => !set.has(i));
+    }
+    return { sheets, unplaced: remaining.map(r => r.pi) };
+  }
+
+  let best = null;
+  for (const ord of orders) {
+    const sorted = items.slice().sort(ord);
+    for (let fc = 0; fc < 3; fc++) for (let sp = 0; sp < 4; sp++) {
+      const r = pack(sorted, fc, sp);
+      if (!best || better(r, best)) best = r;
+    }
+  }
+  const budget = items.length > 400 ? 0 : items.length > 150 ? Math.floor(randomRuns / 4) : randomRuns;
+  const rng = makeRng(opts.seed ?? 42);
+  const base = items.slice().sort(orders[0]);
+  for (let t = 0; t < budget; t++) {
+    const seq = base.slice();
+    const swaps = Math.max(1, Math.floor(seq.length / 3));
+    for (let s = 0; s < swaps; s++) {
+      const i = Math.floor(rng() * seq.length);
+      const j = Math.min(seq.length - 1, i + 1 + Math.floor(rng() * 3));
+      [seq[i], seq[j]] = [seq[j], seq[i]];
+    }
+    const r = pack(seq, Math.floor(rng() * 3), Math.floor(rng() * 4));
+    if (better(r, best)) best = r;
+  }
+  const warnings = [];
+  if (best.unplaced.length) {
+    const names = [...new Set(best.unplaced.map(i => parts[i].label || '#' + (i + 1)))];
+    warnings.push(`${best.unplaced.length} parça yerleştirilemedi (levhaya sığmıyor veya levha adedi yetersiz): ${names.join(', ')}`);
+  }
+  return { sheets: best.sheets, unplaced: best.unplaced, warnings };
+}
+
+function sheetSignature(sh) {
+  return sh.si + '|' + sh.placed.map(p => `${p.pi}:${p.x.toFixed(2)},${p.y.toFixed(2)},${p.w.toFixed(2)},${p.h.toFixed(2)}`).sort().join(';');
+}
+
+function groupSheets(sheets) {
+  const map = new Map();
+  for (const s of sheets) {
+    const k = sheetSignature(s);
+    if (!map.has(k)) map.set(k, { sheet: s, count: 0 });
+    map.get(k).count++;
+  }
+  return [...map.values()];
+}
+
+
+// ---------------- Yardımcılar ----------------
+const $ = s => document.querySelector(s);
+const PART_COLORS = ['#9cc3d5','#b9d7a8','#f2c38b','#d7b5d8','#a9c9c0','#f0a6a0','#c9c1f0','#e6d58a','#9fb8e8','#d6c2a8'];
+const BOARD = '#ebddbe', TRIM = '#cdb98f', EDGE = '#9c8455', INK = '#26323d';
+const partColor = i => PART_COLORS[i % PART_COLORS.length];
+let idc = 0; const newId = () => Date.now().toString(36) + (idc++).toString(36);
+
+function parseNum(s) {
+  const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.');
+  if (!t) return 0;
+  const v = parseFloat(t);
+  return isFinite(v) ? v : NaN;
+}
+function fmt(v, d = 1) {
+  let s = Number(v).toFixed(d);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s.replace('.', ',');
+}
+const fmtDims = (l, w, d) => `${fmt(l, d)} × ${fmt(w, d)}`;
+const perMeter = u => u === 'cm' ? 100 : 1000;
+const fmtArea = (a, u) => fmt(a / perMeter(u) ** 2, 2) + ' m²';
+const fmtMeters = (l, u) => fmt(l / perMeter(u), 2) + ' m';
+const fmtPct = r => '%' + fmt(r * 100, 1);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const validPart = p => p.length > 0 && p.width > 0 && p.qty > 0;
+
+// ---------------- Durum ----------------
+const defaultSettings = () => ({ kerf: 4, trim: 0, minOffcut: 100, decimals: 1, showLabels: true, considerGrain: false, edgeBanding: false, priority: 'waste', unit: 'mm' });
+const starter = () => ({
+  name: 'Yeni proje',
+  parts: [{ id: newId(), length: 0, width: 0, qty: 1, label: '', grainLocked: false, bandLong: 0, bandShort: 0 }],
+  stocks: [{ id: newId(), length: 2800, width: 2100, qty: 0, label: 'Suntalam 18' }],
+  settings: defaultSettings(),
+});
+const example = () => ({
+  name: 'Örnek alt dolap',
+  parts: [
+    { label: 'Yan', length: 720, width: 560, qty: 6, bandLong: 1 },
+    { label: 'Taban', length: 764, width: 560, qty: 3, bandLong: 1 },
+    { label: 'Raf', length: 760, width: 540, qty: 3, bandLong: 1 },
+    { label: 'Kapak', length: 716, width: 396, qty: 6, grainLocked: true, bandLong: 2, bandShort: 2 },
+    { label: 'Kayıt', length: 764, width: 100, qty: 6 },
+  ].map(p => ({ id: newId(), grainLocked: false, bandLong: 0, bandShort: 0, ...p })),
+  stocks: [{ id: newId(), length: 2800, width: 2100, qty: 0, label: 'Suntalam 18' }],
+  settings: { ...defaultSettings(), kerf: 4, trim: 10, edgeBanding: true, considerGrain: true },
+});
+
+function normalize(p) {
+  const n = x => (typeof x === 'number' && isFinite(x)) ? x : (parseNum(x) || 0);
+  return {
+    name: String(p.name || 'Proje'),
+    parts: (p.parts || []).map(x => ({ id: x.id || newId(), length: n(x.length), width: n(x.width), qty: Math.max(0, Math.round(n(x.qty))), label: String(x.label || ''), grainLocked: !!x.grainLocked, bandLong: Math.min(2, Math.max(0, n(x.bandLong))), bandShort: Math.min(2, Math.max(0, n(x.bandShort))) })),
+    stocks: (p.stocks || []).map(x => ({ id: x.id || newId(), length: n(x.length), width: n(x.width), qty: Math.max(0, Math.round(n(x.qty))), label: String(x.label || '') })),
+    settings: { ...defaultSettings(), ...(p.settings || {}) },
+  };
+}
+
+let P = starter();
+let lastResult = null, lastProject = null;
+
+// ---------------- Kayıt (tarayıcıda yerel) ----------------
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+let saveTimer;
+function changed() { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set('kesim.current', P), 400); }
+
+// ---------------- Giriş tabloları ----------------
+function numInput(val, attrs, int = false) {
+  const v = val ? fmt(val, 3) : '';
+  return `<input class="cell" inputmode="${int ? 'numeric' : 'decimal'}" value="${v}" ${attrs}>`;
+}
+
+function renderParts() {
+  const s = P.settings;
+  $('#partRows').innerHTML = P.parts.map((p, i) => `
+    <div class="row" data-i="${i}">
+      <span class="swatch" style="background:${partColor(i)}"></span>
+      ${numInput(p.length, `data-k="length" aria-label="Parça ${i + 1} uzunluk" placeholder="Uzunluk"`)}
+      ${numInput(p.width, `data-k="width" aria-label="Parça ${i + 1} genişlik" placeholder="Genişlik"`)}
+      ${numInput(p.qty, `data-k="qty" aria-label="Parça ${i + 1} adet" placeholder="Adet"`, true)}
+      <input class="cell" data-k="label" value="${esc(p.label)}" placeholder="Etiket" aria-label="Parça ${i + 1} etiket">
+      <button class="del" type="button" data-del="${i}" aria-label="Parça ${i + 1} sil">×</button>
+    </div>
+    ${s.considerGrain || s.edgeBanding ? `<div class="extra" data-i="${i}">
+      ${s.considerGrain ? `<label><input type="checkbox" data-k="grainLocked" ${p.grainLocked ? 'checked' : ''}> Desen kilidi</label>` : ''}
+      ${s.edgeBanding ? `<label title="Bantlanacak uzun kenar sayısı">Bant: uzun <select class="cell" style="width:auto;padding:2px 4px" data-k="bandLong">${[0, 1, 2].map(n => `<option ${p.bandLong == n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label title="Bantlanacak kısa kenar sayısı">kısa <select class="cell" style="width:auto;padding:2px 4px" data-k="bandShort">${[0, 1, 2].map(n => `<option ${p.bandShort == n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>` : ''}
+    </div>` : ''}`).join('');
+}
+
+function renderStocks() {
+  $('#stockRows').innerHTML = P.stocks.map((s, i) => `
+    <div class="row" data-i="${i}">
+      <span></span>
+      ${numInput(s.length, `data-k="length" aria-label="Levha ${i + 1} uzunluk" placeholder="Uzunluk"`)}
+      ${numInput(s.width, `data-k="width" aria-label="Levha ${i + 1} genişlik" placeholder="Genişlik"`)}
+      ${numInput(s.qty, `data-k="qty" aria-label="Levha ${i + 1} adet" placeholder="∞"`, true)}
+      <input class="cell" data-k="label" value="${esc(s.label)}" placeholder="Malzeme" aria-label="Levha ${i + 1} malzeme">
+      <button class="del" type="button" data-del="${i}" aria-label="Levha ${i + 1} sil">×</button>
+    </div>`).join('');
+}
+
+function renderOptions() {
+  const s = P.settings;
+  document.querySelectorAll('[data-opt]').forEach(el => {
+    const k = el.dataset.opt;
+    if (el.type === 'checkbox') el.checked = !!s[k];
+    else el.value = s[k] ? fmt(s[k], 3) : (k === 'decimals' ? '0' : '');
+  });
+  document.querySelectorAll('input[name=prio]').forEach(r => r.checked = r.value === s.priority);
+  document.querySelectorAll('input[name=unit]').forEach(r => r.checked = r.value === s.unit);
+}
+
+function renderAll() {
+  $('#projectName').value = P.name;
+  renderParts(); renderStocks(); renderOptions();
+}
+
+function bindTable(container, list, onStructural) {
+  container.addEventListener('input', e => {
+    const el = e.target, k = el.dataset.k;
+    const row = el.closest('[data-i]'); if (!row || !k) return;
+    const item = list()[+row.dataset.i];
+    if (k === 'label') item.label = el.value;
+    else if (k === 'grainLocked') item.grainLocked = el.checked;
+    else if (k === 'bandLong' || k === 'bandShort') item[k] = +el.value;
+    else {
+      const v = parseNum(el.value);
+      el.classList.toggle('bad', isNaN(v) || v < 0);
+      item[k] = isNaN(v) ? 0 : (k === 'qty' ? Math.round(v) : v);
+    }
+    changed();
+  });
+  container.addEventListener('change', e => { if (e.target.type === 'checkbox' || e.target.tagName === 'SELECT') e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+  container.addEventListener('click', e => {
+    const d = e.target.closest('[data-del]'); if (!d) return;
+    list().splice(+d.dataset.del, 1); onStructural(); changed();
+  });
+}
+
+// Enter: sonraki kutuya geç; son parça satırındaysa yeni satır aç
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target.classList?.contains('cell') || e.target.tagName === 'SELECT') return;
+  const scope = e.target.closest('#partRows, #stockRows');
+  if (!scope) return;
+  e.preventDefault();
+  const cells = [...scope.querySelectorAll('input.cell')];
+  const i = cells.indexOf(e.target);
+  if (i < cells.length - 1) { cells[i + 1].focus(); cells[i + 1].select?.(); return; }
+  if (scope.id === 'partRows') addPart(); else addStock();
+});
+
+function addPart() {
+  const last = P.parts[P.parts.length - 1];
+  P.parts.push({ id: newId(), length: 0, width: 0, qty: 1, label: '', grainLocked: last?.grainLocked || false, bandLong: last?.bandLong || 0, bandShort: last?.bandShort || 0 });
+  renderParts(); changed();
+  const rows = $('#partRows').querySelectorAll('.row'); rows[rows.length - 1]?.querySelector('input')?.focus();
+}
+function addStock() {
+  P.stocks.push({ id: newId(), length: 0, width: 0, qty: 0, label: '' });
+  renderStocks(); changed();
+  const rows = $('#stockRows').querySelectorAll('.row'); rows[rows.length - 1]?.querySelector('input')?.focus();
+}
+
+// ---------------- Sonuç çizimi (SVG) ----------------
+function sheetSvg(sh, s, project) {
+  const L = sh.length, W = sh.width;
+  const m = L * 0.035; // ölçü yazıları için kenar
+  const sw = L / 900;  // çizgi kalınlığı (levha birimi)
+  const maxFs = L / 50, minFs = L / 420;
+  const out = [];
+  out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-m} ${-m} ${L + m * 1.3} ${W + m * 1.3}" role="img" aria-label="Kesim planı ${fmtDims(L, W, s.decimals)}" font-family="system-ui, sans-serif">`);
+  out.push(`<rect x="0" y="0" width="${L}" height="${W}" fill="${TRIM}"/>`);
+  out.push(`<rect x="${s.trim}" y="${s.trim}" width="${L - 2 * s.trim}" height="${W - 2 * s.trim}" fill="${BOARD}"/>`);
+  // Metni kutuya sığdırır; dar-uzun kutularda dikey yazar.
+  const text = (lines, x, y, w, h, color, italic) => {
+    const chars = Math.max(...lines.map(l => l.length));
+    const fit = (bw, bh) => Math.min(maxFs, bh / (lines.length * 1.25), (bw * 0.92) / (chars * 0.58));
+    const fsH = fit(w, h), fsV = fit(h, w);
+    const vertical = fsV > fsH * 1.3;
+    const fs = vertical ? fsV : fsH;
+    if (fs < minFs) return '';
+    const cx = x + w / 2, cy = y + h / 2;
+    const y0 = cy - (lines.length - 1) * fs * 0.6;
+    return `<text x="${cx}" y="${y0}" font-size="${fs}" fill="${color}" text-anchor="middle" dominant-baseline="middle"${italic ? ' font-style="italic"' : ''}${vertical ? ` transform="rotate(-90 ${cx} ${cy})"` : ''}>` +
+      lines.map((l, i) => `<tspan x="${cx}" y="${y0 + i * fs * 1.2}">${esc(l)}</tspan>`).join('') + '</text>';
+  };
+  for (const f of sh.free) {
+    if (Math.min(f.w, f.h) < s.minOffcut) continue;
+    const pad = sw * 3;
+    out.push(`<rect x="${f.x + pad}" y="${f.y + pad}" width="${f.w - 2 * pad}" height="${f.h - 2 * pad}" fill="none" stroke="${EDGE}" stroke-width="${sw}" stroke-dasharray="${sw * 6} ${sw * 5}"/>`);
+    out.push(text([fmtDims(f.w, f.h, s.decimals)], f.x, f.y, f.w, f.h, EDGE, true));
+  }
+  for (const p of sh.placed) {
+    out.push(`<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${partColor(p.pi)}" stroke="${INK}" stroke-width="${sw}"/>`);
+    const dims = fmtDims(p.w, p.h, s.decimals);
+    out.push(text(s.showLabels ? [p.label + (p.rotated ? ' ↻' : ''), dims] : [dims], p.x, p.y, p.w, p.h, INK));
+  }
+  out.push(`<rect x="0" y="0" width="${L}" height="${W}" fill="none" stroke="${EDGE}" stroke-width="${sw * 1.6}"/>`);
+  const ofs = m * 0.5;
+  out.push(`<text x="${L / 2}" y="${-m * 0.35}" font-size="${ofs}" fill="currentColor" text-anchor="middle">${fmt(L, s.decimals)}</text>`);
+  out.push(`<text x="${-m * 0.35}" y="${W / 2}" font-size="${ofs}" fill="currentColor" text-anchor="middle" transform="rotate(-90 ${-m * 0.35} ${W / 2})">${fmt(W, s.decimals)}</text>`);
+  out.push('</svg>');
+  return out.join('');
+}
+
+function renderResults(r, project) {
+  const s = project.settings;
+  const totalParts = project.parts.filter(validPart).reduce((a, p) => a + p.qty, 0);
+  const placed = r.sheets.reduce((a, sh) => a + sh.placed.length, 0);
+  const sheetArea = r.sheets.reduce((a, sh) => a + sh.length * sh.width, 0);
+  const usedArea = r.sheets.reduce((a, sh) => a + sh.usedArea, 0);
+  const util = sheetArea ? usedArea / sheetArea : 0;
+  const offcuts = r.sheets.flatMap(sh => sh.free.filter(f => Math.min(f.w, f.h) >= s.minOffcut));
+  const band = project.parts.filter(validPart).reduce((a, p) => a + (p.bandLong * p.length + p.bandShort * p.width) * p.qty, 0);
+  const perStock = {};
+  r.sheets.forEach(sh => perStock[sh.si] = (perStock[sh.si] || 0) + 1);
+  const stats = [
+    ['Kullanılan levha', r.sheets.length],
+    ['Verim', fmtPct(util)],
+    ['Fire', fmtArea(sheetArea - usedArea, s.unit)],
+    ['Yerleşen parça', `${placed} / ${totalParts}`],
+    ...(s.edgeBanding ? [['Kenar bandı', fmtMeters(band, s.unit)]] : []),
+    ['Kullanılabilir artık', offcuts.length + ' adet'],
+  ];
+  const html = [];
+  html.push(`<h1 class="print-only" style="font-size:18pt;margin:0 0 4px">${esc(project.name)} – Kesim planı</h1>`);
+  html.push(`<p class="print-only" style="margin:0 0 8px">Testere payı ${fmt(s.kerf)} ${s.unit} · Kenar payı ${fmt(s.trim)} ${s.unit}</p>`);
+  r.warnings.forEach(w => html.push(`<div class="warn">${esc(w)}</div>`));
+  html.push(`<section class="box"><div class="summary">${stats.map(([k, v]) => `<div class="stat"><b>${esc(v)}</b><span>${k}</span></div>`).join('')}</div>`);
+  if (Object.keys(perStock).length) html.push(`<div class="stock-use">${Object.entries(perStock).map(([si, n]) => { const st = project.stocks[si]; return `${esc(st.label || 'Levha')} ${fmtDims(st.length, st.width, s.decimals)}: <b>${n} adet</b>`; }).join(' &nbsp;·&nbsp; ')}</div>`);
+  html.push('</section>');
+
+  // Yazdırma için parça listesi
+  html.push(`<section class="print-only"><table class="plist"><thead><tr><th>Etiket</th><th>Uzunluk</th><th>Genişlik</th><th>Adet</th>${s.considerGrain ? '<th>Desen</th>' : ''}${s.edgeBanding ? '<th>Bant U/K</th>' : ''}</tr></thead><tbody>${project.parts.map((p, i) => validPart(p) ? `<tr><td>${esc(p.label || i + 1)}</td><td>${fmt(p.length, s.decimals)}</td><td>${fmt(p.width, s.decimals)}</td><td>${p.qty}</td>${s.considerGrain ? `<td>${p.grainLocked ? 'Kilitli' : '–'}</td>` : ''}${s.edgeBanding ? `<td>${p.bandLong}/${p.bandShort}</td>` : ''}</tr>` : '').join('')}</tbody></table></section>`);
+
+  let no = 1;
+  groupSheets(r.sheets).forEach((g, gi) => {
+    const sh = g.sheet, st = project.stocks[sh.si];
+    const title = g.count === 1 ? `Levha ${no}` : `Levha ${no}–${no + g.count - 1}`;
+    no += g.count;
+    const counts = new Map();
+    sh.placed.forEach(p => {
+      const pp = project.parts[p.pi];
+      const k = `${p.label}  ${fmtDims(pp.length, pp.width, s.decimals)}`;
+      counts.set(k, (counts.get(k) || 0) + 1);
+    });
+    html.push(`<section class="box sheet" data-g="${gi}">
+      <div class="sheet-head"><h3>${title}</h3>${g.count > 1 ? `<span class="badge">×${g.count} aynı plan</span>` : ''}<span class="pct">${fmtPct(sh.usedArea / (sh.length * sh.width))}</span></div>
+      <div class="sheet-sub">${st.label ? esc(st.label) + ' · ' : ''}${fmtDims(sh.length, sh.width, s.decimals)}</div>
+      ${sheetSvg(sh, s, project)}
+      <div class="hint no-print">Büyütmek için plana dokunun. ↻ = döndürülmüş parça.</div>
+      <details><summary>Parçalar (${sh.placed.length})</summary><ul>${[...counts].map(([k, n]) => `<li>${n} × ${esc(k)}</li>`).join('')}</ul></details>
+    </section>`);
+  });
+  if (s.considerGrain) html.push('<p class="hint">Desen yönü: levhanın uzunluk kenarı yataydır; kilitli parçaların uzunluğu bu yöndedir.</p>');
+  $('#results').innerHTML = html.join('');
+}
+
+// ---------------- Hesapla ----------------
+function calculate() {
+  document.activeElement?.blur?.();
+  const snap = normalize(JSON.parse(JSON.stringify(P)));
+  if (!snap.parts.some(validPart)) return toast('En az bir parçanın uzunluk, genişlik ve adedini girin.');
+  if (!snap.stocks.some(s => s.length > 0 && s.width > 0)) return toast('En az bir levha ölçüsü girin.');
+  const btn = $('#calcBtn'); btn.disabled = true; btn.textContent = 'Hesaplanıyor…';
+  setTimeout(() => {
+    try {
+      lastResult = optimize(snap.parts, snap.stocks, snap.settings);
+      lastProject = snap;
+      renderResults(lastResult, snap);
+      if (window.innerWidth < 980) $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error(err); toast('Hesaplama hatası: ' + err.message);
+    } finally { btn.disabled = false; btn.textContent = 'Hesapla'; }
+  }, 20);
+}
+
+// ---------------- Yakınlaştırma ----------------
+let zoomLevel = 1;
+$('#results').addEventListener('click', e => {
+  const sec = e.target.closest('.sheet'); if (!sec || !e.target.closest('svg')) return;
+  $('#zTitle').textContent = sec.querySelector('h3').textContent;
+  $('#zArea').innerHTML = sec.querySelector('svg').outerHTML;
+  zoomLevel = 1; applyZoom();
+  $('#zoom').showModal();
+});
+function applyZoom() { const svg = $('#zArea svg'); if (svg) svg.style.width = (zoomLevel * 100) + '%'; }
+document.querySelectorAll('[data-z]').forEach(b => b.addEventListener('click', () => {
+  const d = +b.dataset.z;
+  zoomLevel = d === 0 ? 1 : Math.min(8, Math.max(0.5, zoomLevel * (d > 0 ? 1.5 : 1 / 1.5)));
+  applyZoom();
+}));
+$('#zClose').addEventListener('click', () => $('#zoom').close());
+
+// ---------------- Menü ----------------
+function toast(msg) {
+  let t = $('#toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status');
+    t.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#26323d;color:#fff;padding:10px 16px;border-radius:8px;z-index:50;max-width:90vw;box-shadow:0 6px 20px #0004';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 3200);
+}
+
+function loadProject(p) {
+  P = normalize(p);
+  lastResult = null; lastProject = null;
+  renderAll(); changed();
+  $('#results').innerHTML = '<section class="box"><div class="empty">Ölçüleri girip <b>Hesapla</b>’ya basın.</div></section>';
+}
+
+const b64encode = str => { const bytes = new TextEncoder().encode(str); let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const b64decode = s => { const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); };
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch { window.prompt('Kopyalayın:', text); return false; }
+}
+
+const actions = {
+  async link() {
+    const url = location.href.split('#')[0] + '#p=' + b64encode(JSON.stringify(P));
+    if (await copyText(url)) toast('Bağlantı kopyalandı. WhatsApp vb. ile gönderebilirsiniz.');
+  },
+  export() {
+    const blob = new Blob([JSON.stringify(P, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = (P.name || 'proje').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  },
+  import() { $('#fileInput').click(); },
+  print() {
+    if (!lastResult) { toast('Önce Hesapla’ya basın.'); return; }
+    window.print();
+  },
+  example() { loadProject(example()); toast('Örnek proje yüklendi. Hesapla’ya basın.'); },
+  clear() { if (confirm('Tüm veriler temizlensin mi?')) loadProject(starter()); },
+};
+$('#menu').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  $('#menu').open = false; actions[b.dataset.act]();
+});
+document.addEventListener('click', e => { if (!e.target.closest('#menu')) $('#menu').open = false; });
+$('#fileInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { loadProject(JSON.parse(await f.text())); toast('Proje yüklendi.'); }
+  catch { toast('Dosya geçerli bir proje değil.'); }
+  e.target.value = '';
+});
+
+// Yazdırırken parça listelerini aç
+let closedDetails = [];
+window.addEventListener('beforeprint', () => { closedDetails = [...document.querySelectorAll('#results details:not([open])')]; closedDetails.forEach(d => d.open = true); });
+window.addEventListener('afterprint', () => closedDetails.forEach(d => d.open = false));
+
+// ---------------- Bağlantılar ----------------
+$('#calcBtn').addEventListener('click', calculate);
+$('#addPart').addEventListener('click', addPart);
+$('#addStock').addEventListener('click', addStock);
+$('#projectName').addEventListener('input', e => { P.name = e.target.value; changed(); });
+bindTable($('#partRows'), () => P.parts, renderParts);
+bindTable($('#stockRows'), () => P.stocks, renderStocks);
+$('#options').addEventListener('input', e => {
+  const el = e.target, s = P.settings;
+  if (el.name === 'prio') s.priority = el.value;
+  else if (el.name === 'unit') s.unit = el.value;
+  else if (el.dataset.opt) {
+    const k = el.dataset.opt;
+    if (el.type === 'checkbox') {
+      s[k] = el.checked;
+      if (k === 'considerGrain' || k === 'edgeBanding') renderParts();
+    } else {
+      const v = parseNum(el.value);
+      el.classList.toggle('bad', isNaN(v) || v < 0);
+      s[k] = isNaN(v) || v < 0 ? 0 : (k === 'decimals' ? Math.min(3, Math.round(v)) : v);
+    }
+  }
+  changed();
+});
+$('#options').addEventListener('change', e => { if (e.target.type === 'checkbox' || e.target.type === 'radio') e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+
+// ---------------- Başlangıç ----------------
+(function init() {
+  const m = location.hash.match(/^#p=(.+)$/);
+  if (m) {
+    try {
+      P = normalize(JSON.parse(b64decode(m[1])));
+      history.replaceState(null, '', location.pathname + location.search);
+      renderAll(); changed();
+      toast('Paylaşılan proje yüklendi.');
+      return;
+    } catch { toast('Bağlantıdaki proje okunamadı.'); }
+  }
+  const saved = store.get('kesim.current');
+  if (saved) P = normalize(saved);
+  renderAll();
+})();
+</script>
+
 <!-- Default Statcounter code for Kesim
 https://burakakgulll.github.io/kesim/ -->
 <script type="text/javascript">
@@ -59,5 +811,5 @@ src="https://c.statcounter.com/13353636/0/ce992ef8/1/"
 alt="Web Analytics"
 referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
 <!-- End of Statcounter Code -->
-</body>
-</html>
+
+</body></html>
