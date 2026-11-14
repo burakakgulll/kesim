@@ -1,4 +1,4 @@
-s## 📄 Telif Hakkı / Copyright
+## 📄 Telif Hakkı / Copyright
 
 ### Türkçe
 > Tüm hakları saklıdır. Bu projenin hiçbir bölümü yazarın yazılı izni olmadan kopyalanamaz, dağıtılamaz veya değiştirilemez.  
